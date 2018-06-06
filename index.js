@@ -3,13 +3,13 @@ import RocketChat from './rocketchat';
 const client = new RocketChat();
 client.oncePing = function() {
 	this.registerUser();
-}
+};
 
 function exitHandler() {
 	console.log(JSON.stringify(client.metrics, null, 2));
 }
 
-process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('exit', exitHandler.bind(null, {cleanup:true}));
 
 //catches ctrl+c event
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));

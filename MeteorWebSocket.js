@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+// import crypto from 'crypto';
 import EJSON from 'ejson';
 import WebSocket from 'faye-websocket';
 import randomstring from 'randomstring';
@@ -9,7 +9,7 @@ export default class MeteorWebSocket {
 	constructor(url) {
 		this.ws = new WebSocket.Client(`${ process.env.WS_URL || url || 'ws://localhost:3000' }/websocket`);
 
-		this.ws.on('open', (event) => {
+		this.ws.on('open', () => {
 			this.log('open');
 		});
 
@@ -56,7 +56,7 @@ export default class MeteorWebSocket {
 	}
 
 	parseMessage(event) {
-		this.log('msg <-',event.data);
+		this.log('msg <-', event.data);
 		const data = EJSON.parse(event.data);
 
 		switch (data.msg) {
@@ -88,6 +88,7 @@ export default class MeteorWebSocket {
 					delete this._calledMethods[data.id];
 					return;
 				}
+				break;
 
 			case 'changed':
 				this.ws.emit(data.collection, data.fields);
