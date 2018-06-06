@@ -7,12 +7,14 @@
     "start": "babel-node index.js",
     "watch": "nodemon index.js --exec babel-node",
     "cli": "babel-node cli.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "ejson": "^2.1.2",
+    "eslint": "^4.19.1",
     "faye-websocket": "^0.11.1",
     "inquirer": "^6.0.0",
     "node-random-name": "^1.0.1",
