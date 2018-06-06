@@ -3,6 +3,10 @@ import EJSON from 'ejson';
 import WebSocket from 'faye-websocket';
 import randomstring from 'randomstring';
 
+import Method from './method';
+
+import { waitFor } from './utils';
+
 export default class RocketChat {
 	constructor(id) {
 		this.id = id || randomstring.generate(5);
@@ -20,6 +24,8 @@ export default class RocketChat {
 			this.log('close', event.code, event.reason);
 			this.ws = null;
 		});
+
+		this._userId;
 
 		this._methodCounter = 0;
 		this._calledMethods = {};
@@ -66,7 +72,12 @@ export default class RocketChat {
 						this._calledMethods[data.id].reject(data.error);
 					}
 					delete this._calledMethods[data.id];
+					return;
 				}
+
+			case 'changed':
+				this.ws.emit(data.collection, data.fields);
+				return;
 		}
 	}
 
@@ -109,6 +120,7 @@ export default class RocketChat {
 	}
 
 	loggedInSubscribe(id) {
+		this._userId = id;
 		this.send({"msg":"sub","id":"uxwugDrEmTgLFDov2","name":"stream-notify-logged","params":["Users:NameChanged",{"useCollection":false,"args":[]}]});
 		this.send({"msg":"sub","id":"EF9eytMeqSRFPHKLq","name":"stream-notify-logged","params":["updateEmojiCustom",{"useCollection":false,"args":[]}]});
 		this.send({"msg":"sub","id":"Gd68zHFsAFWuisPjH","name":"stream-notify-logged","params":["deleteEmojiCustom",{"useCollection":false,"args":[]}]});
@@ -132,7 +144,7 @@ export default class RocketChat {
 
 	registerUser() {
 		const name = 'Name ' + randomstring.generate();
-		const username = 'username.' + randomstring.generate();
+		const username = this._username = 'username.' + randomstring.generate();
 		const pass = randomstring.generate();
 		const email = `${ username }@${ pass }.com`;
 
@@ -150,17 +162,30 @@ export default class RocketChat {
 		this.send({"msg":"sub","id":"C5SyCJBsKz2Ffbwvp","name":"stream-room-messages","params":[rid,{"useCollection":false,"args":[]}]});
 		this.send({"msg":"sub","id":"nFLWdC8QRB6mKahZe","name":"stream-notify-room","params":[rid + "/deleteMessage",{"useCollection":false,"args":[]}]});
 		this.send({"msg":"sub","id":"c2R7sGCEKuJRaa9Yg","name":"stream-notify-room","params":[rid + "/typing",{"useCollection":false,"args":[]}]});
-	}
-}
 
-class Method {
-	constructor() {
-		this._promise = new Promise((resolve, reject) => {
-			this.resolve = resolve;
-			this.reject = reject;
+		this.ws.on('stream-room-messages', (event) => {
+			if (event.eventName !== rid) {
+				return;
+			}
+
+			const [data] = event.args;
+
+			if (this._userId !== data.u._id) {
+				this.send({"msg":"method","method":"readMessages","params":[rid]});
+			}
+
+			if (data.msg.indexOf(`@${ this._username }`) !== -1) {
+				this.sendMessage(rid, `hi there @${ data.u.username }`);
+			}
 		});
-		this.then = this._promise.then.bind(this._promise);
-		this.catch = this._promise.catch.bind(this._promise);
-		this[Symbol.toStringTag] = 'Promise';
+	}
+
+	async sendMessage(rid, msg) {
+		this.send({"msg":"method","method":"stream-notify-room","params":[rid + "/typing",this._username,true]});
+
+		await waitFor(Math.max(1500, Math.random() * 5 * 1000));
+
+		this.send({"msg":"method","method":"stream-notify-room","params":[rid + "/typing",this._username,false]});
+		return this.send({"msg":"method","method":"sendMessage","params":[{"_id":randomstring.generate(17),rid, msg}]});
 	}
 }
