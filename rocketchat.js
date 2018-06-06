@@ -6,8 +6,8 @@ import MeteorWebSocket from './MeteorWebSocket';
 import { waitFor } from './utils';
 
 export default class RocketChat extends MeteorWebSocket {
-	constructor(id) {
-		super();
+	constructor({id, url}) {
+		super(url);
 
 		this.id = id || randomstring.generate(5);
 
