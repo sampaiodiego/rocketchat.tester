@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import EJSON from 'ejson';
 import WebSocket from 'faye-websocket';
 import randomstring from 'randomstring';
+import random_name from 'node-random-name';
 
 import Method from './method';
 
@@ -143,15 +144,17 @@ export default class RocketChat {
 	}
 
 	registerUser() {
-		const name = 'Name ' + randomstring.generate();
-		const username = this._username = 'username.' + randomstring.generate();
+		const name = random_name();
 		const pass = randomstring.generate();
-		const email = `${ username }@${ pass }.com`;
+		const email = `${ randomstring.generate() }@${ pass }.com`;
 
 		this.send({"msg":"method","method":"registerUser","params":[{name,email,pass,"confirm-pass":pass}]})
 			.then(() => this.login({ email }, pass))
 			.then(() => this.send({"msg":"method","method":"getUsernameSuggestion","params":[]}))
-			.then(() => this.send({"msg":"method","method":"setUsername","params":[username]}))
+			.then((suggestion) => {
+				this._username = suggestion;
+				this.send({"msg":"method","method":"setUsername","params":[suggestion]});
+			})
 			.then(() => this.openRoom('GENERAL')); // TODO: this should not be hardcoded
 	}
 
