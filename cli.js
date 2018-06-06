@@ -1,22 +1,16 @@
 import RocketChat from './rocketchat';
 var inquirer = require("inquirer");
 
-// const client = ;
-
-// client.oncePing = function() {
-// 	this.registerUser();
-// }
-
 let clients = [];
 
 const connect = (a) => {
 	for (let index = 0; index < a; index++) {
-                                            const client = new RocketChat(null);
-                                            client.oncePing = function() {
-                                            	this.registerUser();
-                                            }
-                                            clients.push(client);
-                                          }
+		const client = new RocketChat(null);
+		client.oncePing = function() {
+			this.registerUser();
+		}
+		clients.push(client);
+	}
 	console.log('connected');
 
 	return true;
@@ -36,7 +30,10 @@ const writeMessage = async () => {
 
 const message = async (n) => {
 	const m = await writeMessage();
-	console.log(m)
+	for (let index = 0; index < index < n; index++) {
+		const element = clients[index % clients.length];
+		element.sendMessage('GENERAL', m);
+	}
 }
 const howMany = async () => {
 	const answers = await inquirer.prompt([

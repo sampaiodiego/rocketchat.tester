@@ -58,6 +58,13 @@ export default class MeteorWebSocket {
 		const data = EJSON.parse(event.data);
 
 		switch (data.msg) {
+			// case 'connected':
+			// 	if (this.oncePing) {
+			// 		this.oncePing.call(this);
+			// 		delete this.oncePing;
+			// 	}
+			// 	return;
+
 			case 'ping':
 				this.send({ msg: 'pong' });
 
