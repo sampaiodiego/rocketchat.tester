@@ -29,10 +29,12 @@ export default class MeteorWebSocket {
 			methods: [],
 			subscriptions: []
 		};
+
+		this.debug = false;
 	}
 
 	log(...args) {
-		// console.log(`[${ this.id }]`, ...args);
+		this.debug && console.log(`[${ this.id }]`, ...args);
 	}
 
 	send(msg) {
