@@ -6,8 +6,8 @@ import randomstring from 'randomstring';
 import TimedPromise from './timedpromise';
 
 export default class MeteorWebSocket {
-	constructor() {
-		this.ws = new WebSocket.Client(`${ process.env.WS_URL || 'ws://localhost:3000' }/websocket`);
+	constructor(url) {
+		this.ws = new WebSocket.Client(`${ process.env.WS_URL || url || 'ws://localhost:3000' }/websocket`);
 
 		this.ws.on('open', () => {
 			this.log('open');

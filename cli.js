@@ -1,11 +1,11 @@
 import RocketChat from './rocketchat';
 const inquirer = require('inquirer');
-
+import { waitFor } from './utils';
 const clients = [];
-
+let url;
 const connect = (a) => {
 	for (let index = 0; index < a; index++) {
-		const client = new RocketChat(null);
+		const client = new RocketChat({ url });
 		client.oncePing = function() {
 			this.registerUser();
 		};
@@ -28,11 +28,24 @@ const writeMessage = async() => {
 	return answers.message;
 };
 
+const writeUrl = async() => {
+	const answers = await inquirer.prompt([
+		{
+			type: 'input',
+			name: 'message',
+			default: 'ws://localhost:3000',
+			message: 'write your server'
+		}
+	]);
+	return answers.message;
+};
+
 const message = async(n) => {
 	const m = await writeMessage();
 	for (let index = 0; index < n; index++) {
 		const element = clients[index % clients.length];
 		element.sendMessage('GENERAL', m);
+		await waitFor(1);
 	}
 };
 const howMany = async() => {
@@ -80,7 +93,9 @@ const users = async() => {
 			await message(n);
 	}
 };
+
 (async() => {
+	url = await writeUrl();
 	while (true) { // eslint-disable-line no-constant-condition
 		const answers = await inquirer.prompt([{
 			type: 'list',
