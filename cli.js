@@ -30,7 +30,7 @@ const writeMessage = async () => {
 
 const message = async (n) => {
 	const m = await writeMessage();
-	for (let index = 0; index < index < n; index++) {
+	for (let index = 0; index < n; index++) {
 		const element = clients[index % clients.length];
 		element.sendMessage('GENERAL', m);
 	}

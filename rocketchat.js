@@ -20,7 +20,7 @@ export default class RocketChat extends MeteorWebSocket {
 
 	startup() {
 		this.send({"msg":"connect","version":"1","support":["1","pre2","pre1"]});
-		this.send({"msg":"method","method":"autoTranslate.getSupportedLanguages","params":["en"]});
+		this.send({"msg":"method","method":"autoTranslate.getSupportedLanguages","params":["en"]}).catch(() => {});
 		this.send({"msg":"method","method":"listCustomSounds","params":[]});
 		this.send({"msg":"method","method":"listEmojiCustom","params":[]});
 		this.send({"msg":"method","method":"apps/is-enabled","params":[]})
