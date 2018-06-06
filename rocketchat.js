@@ -33,7 +33,7 @@ export default class RocketChat {
 	}
 
 	log(...args) {
-		console.log(`[${ this.id }]`, ...args);
+		// console.log(`[${ this.id }]`, ...args);
 	}
 
 	send(msg) {
@@ -55,6 +55,12 @@ export default class RocketChat {
 		const data = EJSON.parse(event.data);
 
 		switch (data.msg) {
+			case 'connected':
+			if (this.oncePing) {
+					this.oncePing.call(this);
+					delete this.oncePing;
+				}
+				return;
 			case 'ping':
 				this.send({ msg: 'pong' });
 
@@ -177,7 +183,7 @@ export default class RocketChat {
 				this.send({"msg":"method","method":"readMessages","params":[rid]});
 			}
 
-			if (data.msg.indexOf(`@${ this._username }`) !== -1) {
+			if (data.msg.indexOf(`@${ this._username }`) !== -1 || /@(all|here)/.test(data.msg)) {
 				this.sendMessage(rid, `hi there @${ data.u.username }`);
 			}
 		});
