@@ -6,7 +6,7 @@ import MeteorWebSocket from './MeteorWebSocket';
 import { waitFor } from './utils';
 
 export default class RocketChat extends MeteorWebSocket {
-	constructor({id, url}) {
+	constructor({id, url} = {}) {
 		super(url);
 
 		this.id = id || randomstring.generate(5);
@@ -36,7 +36,8 @@ export default class RocketChat extends MeteorWebSocket {
 		this.send({'msg':'sub', 'name':'stream-notify-all', 'params':['deleteCustomSound', {'useCollection':false, 'args':[]}]});
 		this.send({'msg':'sub', 'name':'activeUsers', 'params':[]});
 		this.send({'msg':'sub', 'name':'userData', 'params':[]});
-		this.send({'msg':'sub', 'name':'stream-notify-all', 'params':['public-settings-changed', {'useCollection':false, 'args':[]}]});
+		this.send({'msg':'sub', 'name':'stream-notify-all', 'params':['public-settings-changed', {'useCollection':false, 'args':[]}]})
+			.then((...args) => this.emit('started'));
 	}
 
 	appsSubscribe() {

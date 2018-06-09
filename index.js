@@ -1,9 +1,9 @@
 import RocketChat from './rocketchat';
 
 const client = new RocketChat();
-client.oncePing = function() {
-	this.registerUser();
-};
+client.on('started', () => {
+	client.registerUser();
+});
 
 function exitHandler() {
 	console.log(JSON.stringify(client.metrics, null, 2));
