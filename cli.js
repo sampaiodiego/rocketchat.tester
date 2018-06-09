@@ -1,8 +1,10 @@
 import RocketChat from './rocketchat';
 var inquirer = require("inquirer");
 import { waitFor } from "./utils";
+import { createDiffieHellman } from 'crypto';
 let clients = [];
 let url;
+
 const connect = (a) => {
 	for (let index = 0; index < a; index++) {
 		const client = new RocketChat({ url });
@@ -42,12 +44,29 @@ const writeUrl = async () => {
 
 const message = async (n) => {
 	const m = await writeMessage();
-	for (let index = 0; index < n; index++) {
+	for (let index = 0; index < clients.length; index++) {
 		const element = clients[index % clients.length];
 		element.sendMessage('GENERAL', m);
 		await waitFor(1);
 	}
 }
+
+let dmInterval = 1000;
+const sendDm = () => {
+	if(!dmInterval) {
+		return;
+	}
+	setTimeout(async () => {
+		for (let index = 0; index < clients.length; index++) {
+			const cli1 = clients[index % clients.length];
+			const cli2 = clients[index + 1 % clients.length];
+			// cli1.sendDm(cli2);
+			console.log('cli1.sendDm(cli2);')
+		}
+    sendDm();
+  }, dmInterval);
+}
+
 const howMany = async () => {
 	const answers = await inquirer.prompt([
     {
@@ -66,7 +85,31 @@ const howMany = async () => {
     }
   ]);
   return answers.number
+}
 
+const howMuchInterval = async () => {
+	const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "number",
+			message: "set the interval",
+			default: 0,
+      validate: function(value) {
+        var pass = value.match(
+          /^[0-9]+]?$/i
+        );
+        if (pass) {
+          return true;
+        }
+        return "Please enter a valid number";
+      }
+    }
+  ]);
+  return answers.number
+}
+const dm = async () => {
+	dmInterval = await howMuchInterval();
+	sendDm();
 }
 const users = async () => {
 	const answers = await inquirer.prompt([
@@ -74,7 +117,7 @@ const users = async () => {
 			type: "list",
 			name: "action",
 			message: "What do you want?",
-			choices: ["Connect", "Disconnect", "Message"],
+			choices: ["Connect", "Disconnect", "Message", "Dm"],
 			filter: function(val) {
 			return val.toLowerCase();
 		}
@@ -91,6 +134,8 @@ const users = async () => {
 		case "message":
 			n = await howMany();
 			await message(n);
+		case "dm":
+			await dm();
   }
 }
 
