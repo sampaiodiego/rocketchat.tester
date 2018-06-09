@@ -51,6 +51,25 @@ const message = async(n) => {
 	}
 };
 
+
+let publicInterval = 1000;
+let publicRooms = 0;
+let publicTimer = null;
+const sendPublic = () => {
+	if (!publicInterval || !publicRooms) {
+		return;
+	}
+	publicTimer = setTimeout(async() => {
+		for (let index = 0; index < clients.length; index++) {
+			const cli = clients[index];
+			const dm = index % publicRooms;
+			cli.sendPublic(dm);
+		}
+		sendPublic();
+	}, publicInterval);
+};
+
+
 let dmInterval = 1000;
 let dmTimer = null;
 const sendDM = () => {
@@ -107,6 +126,15 @@ const howMuchInterval = async() => {
 	]);
 	return answers.number;
 };
+const handlePublic = async() => {
+	publicInterval = await howMuchInterval();
+	publicRooms = await howMany();
+	if (publicTimer) {
+		clearTimeout(publicTimer);
+	}
+	sendPublic();
+};
+
 const dm = async() => {
 	dmInterval = await howMuchInterval();
 	if (dmTimer) {
@@ -120,7 +148,7 @@ const users = async() => {
 			type: 'list',
 			name: 'action',
 			message: 'What do you want?',
-			choices: ['Connect', 'Disconnect', 'Message', 'Dm'],
+			choices: ['Connect', 'Disconnect', 'Message', 'Dm', 'Public'],
 			filter(val) {
 				return val.toLowerCase();
 			}
@@ -138,7 +166,9 @@ const users = async() => {
 			n = await howMany();
 			return await message(n);
 		case 'dm':
-			await dm();
+			return await dm();
+		case 'public':
+			return await handlePublic();
 	}
 };
 
