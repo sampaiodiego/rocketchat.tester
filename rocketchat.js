@@ -142,4 +142,33 @@ export default class RocketChat extends MeteorWebSocket {
 
 		return p.then((rid) => this.sendMessage(rid, msg));
 	}
+
+	createChannel(roomName) {
+		return this.send({'msg':'method', 'method':'createChannel', 'params':[roomName]});
+		// ["{\"msg\":\"method\",\"method\":\"createChannel\",\"params\":[\"accc\",[],false,{},{\"broadcast\":false}],\"id\":\"17\"}"]
+	}
+
+	joinRoom(rid) {
+		// ["{\"msg\":\"method\",\"method\":\"joinRoom\",\"params\":[\"Gjgg7i8aCw2tpTxnj\",null],\"id\":\"64\"}"]
+		return this.send({'msg':'method', 'method':'joinRoom', 'params':[rid, null]});
+	}
+
+	sendPublic(qt, msg = 'hi there') {
+		// ["{\"msg\":\"method\",\"method\":\"roomNameExists\",\"params\":[\"acc\"],\"id\":\"15\"}"]
+
+		const rooms = [];
+
+		for (let i = 0; i < qt; i++) {
+			const roomName = `load-test-${ qt }`;
+
+			const p = this._roomCache[roomName] || this.send({'msg':'method', 'method':'getRoomIdByNameOrId', 'params':[roomName]})
+				.then((rid) => this.joinRoom(rid).then(() => rid))
+				.catch(() => this.createChannel(roomName))
+				.then((rid) => this.openRoom(rid));
+
+			this._roomCache[roomName] = p;
+
+			p.then((rid) => this.sendMessage(rid, msg));
+		}
+	}
 }
