@@ -16,6 +16,8 @@ export default class RocketChat extends MeteorWebSocket {
 		});
 
 		this._userId;
+
+		this._roomCache = {};
 	}
 
 	startup() {
@@ -85,7 +87,7 @@ export default class RocketChat extends MeteorWebSocket {
 		const pass = randomstring.generate();
 		const email = `${ randomstring.generate() }@${ pass }.com`;
 
-		this.send({'msg':'method', 'method':'registerUser', 'params':[{name, email, pass, 'confirm-pass':pass}]})
+		return this.send({'msg':'method', 'method':'registerUser', 'params':[{name, email, pass, 'confirm-pass':pass}]})
 			.then(() => this.login({ email }, pass))
 			.then(() => this.send({'msg':'method', 'method':'getUsernameSuggestion', 'params':[]}))
 			.then((suggestion) => {
@@ -95,14 +97,7 @@ export default class RocketChat extends MeteorWebSocket {
 			.then(() => this.openRoom('GENERAL')); // TODO: this should not be hardcoded
 	}
 
-	openRoom(rid) {
-		this.send({'msg':'method', 'method':'loadHistory', 'params':[rid, null, 50, new Date()]})
-			.then(() => this.send({'msg':'method', 'method':'readMessages', 'params':[rid]}));
-		this.send({'msg':'method', 'method':'getRoomRoles', 'params':[rid]});
-		this.send({'msg':'sub', 'name':'stream-room-messages', 'params':[rid, {'useCollection':false, 'args':[]}]});
-		this.send({'msg':'sub', 'name':'stream-notify-room', 'params':[`${ rid }/deleteMessage`, {'useCollection':false, 'args':[]}]});
-		this.send({'msg':'sub', 'name':'stream-notify-room', 'params':[`${ rid }/typing`, {'useCollection':false, 'args':[]}]});
-
+	async openRoom(rid, respondMentions = true) {
 		this.ws.on('stream-room-messages', (event) => {
 			if (event.eventName !== rid) {
 				return;
@@ -114,10 +109,20 @@ export default class RocketChat extends MeteorWebSocket {
 				this.send({'msg':'method', 'method':'readMessages', 'params':[rid]});
 			}
 
-			if (data.msg.indexOf(`@${ this._username }`) !== -1 || /@(all|here)/.test(data.msg)) {
+			if (respondMentions && data.msg.indexOf(`@${ this._username }`) !== -1 || /@(all|here)/.test(data.msg)) {
 				this.sendMessage(rid, `hi there @${ data.u.username }`);
 			}
 		});
+
+		this.send({'msg':'method', 'method':'getRoomRoles', 'params':[rid]});
+		this.send({'msg':'sub', 'name':'stream-room-messages', 'params':[rid, {'useCollection':false, 'args':[]}]});
+		this.send({'msg':'sub', 'name':'stream-notify-room', 'params':[`${ rid }/deleteMessage`, {'useCollection':false, 'args':[]}]});
+		this.send({'msg':'sub', 'name':'stream-notify-room', 'params':[`${ rid }/typing`, {'useCollection':false, 'args':[]}]});
+
+		await this.send({'msg':'method', 'method':'loadHistory', 'params':[rid, null, 50, new Date()]});
+		await this.send({'msg':'method', 'method':'readMessages', 'params':[rid]});
+
+		return rid;
 	}
 
 	async sendMessage(rid, msg) {
@@ -127,5 +132,14 @@ export default class RocketChat extends MeteorWebSocket {
 
 		this.send({'msg':'method', 'method':'stream-notify-room', 'params':[`${ rid }/typing`, this._username, false]});
 		return this.send({'msg':'method', 'method':'sendMessage', 'params':[{'_id':randomstring.generate(17), rid, msg}]});
+	}
+
+	sendDM(to, msg) {
+		const p = this._roomCache[to._username] || this.send({'msg':'method', 'method':'createDirectMessage', 'params':[to._username]})
+			.then(({ rid }) => this.openRoom(rid, false));
+
+		this._roomCache[to._username] = p;
+
+		return p.then((rid) => this.sendMessage(rid, msg));
 	}
 }

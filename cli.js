@@ -8,9 +8,9 @@ let url;
 const connect = (a) => {
 	for (let index = 0; index < a; index++) {
 		const client = new RocketChat({ url });
-		client.oncePing = function() {
+		client.on('started', function() {
 			this.registerUser();
-		};
+		});
 		clients.push(client);
 	}
 	console.log('connected');
@@ -52,17 +52,18 @@ const message = async(n) => {
 };
 
 let dmInterval = 1000;
-const sendDm = () => {
+let dmTimer = null;
+const sendDM = () => {
 	if (!dmInterval) {
 		return;
 	}
-	setTimeout(async() => {
+	dmTimer = setTimeout(async() => {
 		for (let index = 0; index < clients.length; index++) {
 			const cli1 = clients[index % clients.length];
-			const cli2 = clients[index + 1 % clients.length];
-			cli1.sendDm(cli2);
+			const cli2 = clients[(index + 1) % clients.length];
+			cli1.sendDM(cli2);
 		}
-		sendDm();
+		sendDM();
 	}, dmInterval);
 };
 
@@ -108,7 +109,10 @@ const howMuchInterval = async() => {
 };
 const dm = async() => {
 	dmInterval = await howMuchInterval();
-	sendDm();
+	if (dmTimer) {
+		clearTimeout(dmTimer);
+	}
+	sendDM();
 };
 const users = async() => {
 	const answers = await inquirer.prompt([
