@@ -59,6 +59,10 @@ export default class RocketChat extends MeteorWebSocket {
 			.then(({ id }) => this.loggedInSubscribe(id));
 	}
 
+	resumeLogin(token) {
+		return this.send({'msg':'method', 'method':'login', 'params':[{resume: token}]});
+	}
+
 	loggedInSubscribe(id) {
 		this._userId = id;
 		this.send({'msg':'sub', 'name':'stream-notify-logged', 'params':['Users:NameChanged', {'useCollection':false, 'args':[]}]});
@@ -170,5 +174,9 @@ export default class RocketChat extends MeteorWebSocket {
 
 			p.then((rid) => this.sendMessage(rid, msg));
 		}
+	}
+
+	disconnect() {
+		return this.close();
 	}
 }

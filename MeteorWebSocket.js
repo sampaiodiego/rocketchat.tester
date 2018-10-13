@@ -40,6 +40,10 @@ export default class MeteorWebSocket extends EventEmitter {
 		this.debug && console.log(`[${ this.id }]`, ...args);
 	}
 
+	close() {
+		return this.ws.close();
+	}
+
 	send(msg) {
 		if (msg.msg === 'method') {
 			msg.id = (++this._methodCounter).toString();
