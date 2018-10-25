@@ -9,6 +9,7 @@ const connect = (a) => {
 	for (let index = 0; index < a; index++) {
 		const client = new RocketChat({ url });
 		client.on('started', function() {
+			console.log('started');
 			this.registerUser();
 		});
 		clients.push(client);
