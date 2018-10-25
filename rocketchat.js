@@ -39,7 +39,7 @@ export default class RocketChat extends MeteorWebSocket {
 		this.send({'msg':'sub', 'name':'activeUsers', 'params':[]});
 		this.send({'msg':'sub', 'name':'userData', 'params':[]});
 		this.send({'msg':'sub', 'name':'stream-notify-all', 'params':['public-settings-changed', {'useCollection':false, 'args':[]}]})
-			.then((...args) => this.emit('started'));
+			.then(() => this.emit('started'));
 	}
 
 	appsSubscribe() {
@@ -159,8 +159,6 @@ export default class RocketChat extends MeteorWebSocket {
 
 	sendPublic(qt, msg = 'hi there') {
 		// ["{\"msg\":\"method\",\"method\":\"roomNameExists\",\"params\":[\"acc\"],\"id\":\"15\"}"]
-
-		const rooms = [];
 
 		for (let i = 0; i < qt; i++) {
 			const roomName = `load-test-${ qt }`;
