@@ -1,8 +1,9 @@
 // import crypto from 'crypto';
+import EventEmitter from 'events';
+
 import EJSON from 'ejson';
 import WebSocket from 'faye-websocket';
 import randomstring from 'randomstring';
-import EventEmitter from 'events';
 
 import TimedPromise from './timedpromise';
 
@@ -10,7 +11,7 @@ export default class MeteorWebSocket extends EventEmitter {
 	constructor(url) {
 		super();
 
-		this.ws = new WebSocket.Client(`${ process.env.WS_URL || url || 'ws://localhost:3000' }/websocket`);
+		this.ws = new WebSocket.Client(`${ url || 'ws://localhost:3000' }/websocket`);
 
 		this.ws.on('open', () => {
 			this.log('open');
@@ -30,10 +31,10 @@ export default class MeteorWebSocket extends EventEmitter {
 
 		this.metrics = {
 			methods: [],
-			subscriptions: []
+			subscriptions: [],
 		};
 
-		this.debug = false;
+		this.debug = true;
 	}
 
 	log(...args) {
@@ -56,9 +57,12 @@ export default class MeteorWebSocket extends EventEmitter {
 		this.log('msg ->', str);
 
 		if (msg.msg === 'method') {
-			return this._calledMethods[msg.id] = new TimedPromise(msg.method);
-		} else if (msg.msg === 'sub') {
-			return this._subs[msg.id] = new TimedPromise(msg.name);
+			this._calledMethods[msg.id] = new TimedPromise(msg.method);
+			return this._calledMethods[msg.id];
+		}
+		if (msg.msg === 'sub') {
+			this._subs[msg.id] = new TimedPromise(msg.name);
+			return this._subs[msg.id];
 		}
 	}
 
@@ -93,7 +97,6 @@ export default class MeteorWebSocket extends EventEmitter {
 					}
 					this.metrics.methods.push({ name: this._calledMethods[data.id].name, time: this._calledMethods[data.id].elapsedTime() });
 					delete this._calledMethods[data.id];
-					return;
 				}
 				break;
 
