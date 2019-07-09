@@ -87,7 +87,7 @@ export default class MeteorWebSocket extends EventEmitter {
 					delete this.oncePing;
 				}
 
-				return;
+				break;
 
 			case 'result':
 				if (this._calledMethods[data.id]) {
@@ -103,7 +103,7 @@ export default class MeteorWebSocket extends EventEmitter {
 
 			case 'changed':
 				this.ws.emit(data.collection, data.fields);
-				return;
+				break;
 
 			case 'ready':
 				data.subs.forEach((id) => {
@@ -117,7 +117,7 @@ export default class MeteorWebSocket extends EventEmitter {
 						delete this._subs[id];
 					}
 				});
-				return;
+				break;
 		}
 	}
 }
