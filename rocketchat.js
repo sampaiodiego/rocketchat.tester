@@ -125,7 +125,7 @@ export default class RocketChat extends MeteorWebSocket {
 				this.send({ msg: 'method', method: 'readMessages', params: [rid] });
 			}
 
-			if (respondMentions && data.msg.indexOf(`@${ this._username }`) !== -1 || /@(all|here)/.test(data.msg)) {
+			if (respondMentions && (data.msg.indexOf(`@${ this._username }`) !== -1 || /@(all|here)/.test(data.msg))) {
 				this.sendMessage(rid, `hi there @${ data.u.username }`);
 			}
 		});
