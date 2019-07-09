@@ -11,7 +11,7 @@ export const debug = (obj) => {
 	return obj;
 };
 export default class RocketChat extends MeteorWebSocket {
-	constructor({ id, url } = {}) {
+	constructor({ id, url, runAfterStartup = true } = {}) {
 		super(url || process.env.WS_URL);
 
 		this.id = id || randomstring.generate(5);
@@ -23,10 +23,18 @@ export default class RocketChat extends MeteorWebSocket {
 		this._userId;
 
 		this._roomCache = {};
+
+		if (runAfterStartup) {
+			this.on('started', this.afterStartup);
+		}
 	}
 
 	startup() {
-		this.send({ msg: 'connect', version: '1', support: ['1', 'pre2', 'pre1'] });
+		this.send({ msg: 'connect', version: '1', support: ['1', 'pre2', 'pre1'] })
+			.then(() => this.emit('started'));
+	}
+
+	afterStartup() {
 		this.send({ msg: 'method', method: 'autoTranslate.getSupportedLanguages', params: ['en'] }).catch(() => {});
 		this.send({ msg: 'method', method: 'listCustomSounds', params: [] });
 		this.send({ msg: 'method', method: 'listEmojiCustom', params: [] });
@@ -43,8 +51,7 @@ export default class RocketChat extends MeteorWebSocket {
 		this.send({ msg: 'sub', name: 'stream-notify-all', params: ['deleteCustomSound', { useCollection: false, args: [] }] });
 		this.send({ msg: 'sub', name: 'activeUsers', params: [] });
 		this.send({ msg: 'sub', name: 'userData', params: [] });
-		this.send({ msg: 'sub', name: 'stream-notify-all', params: ['public-settings-changed', { useCollection: false, args: [] }] })
-			.then(() => this.emit('started'));
+		this.send({ msg: 'sub', name: 'stream-notify-all', params: ['public-settings-changed', { useCollection: false, args: [] }] });
 	}
 
 	appsSubscribe() {

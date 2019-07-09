@@ -64,6 +64,7 @@ export default class MeteorWebSocket extends EventEmitter {
 			this._subs[msg.id] = new TimedPromise(msg.name);
 			return this._subs[msg.id];
 		}
+		return Promise.resolve();
 	}
 
 	parseMessage(event) {
