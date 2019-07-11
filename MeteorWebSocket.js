@@ -2,7 +2,7 @@
 import EventEmitter from 'events';
 
 import EJSON from 'ejson';
-import WebSocket from 'faye-websocket';
+import WebSocket from 'ws';
 import randomstring from 'randomstring';
 
 import TimedPromise from './timedpromise';
@@ -11,7 +11,7 @@ export default class MeteorWebSocket extends EventEmitter {
 	constructor(url) {
 		super();
 
-		this.ws = new WebSocket.Client(`${ url || 'ws://localhost:3000' }/websocket`);
+		this.ws = new WebSocket(`${ url || 'ws://localhost:3000' }/websocket`);
 
 		this.ws.on('open', () => {
 			this.log('open');
@@ -67,25 +67,23 @@ export default class MeteorWebSocket extends EventEmitter {
 		return Promise.resolve();
 	}
 
-	parseMessage(event) {
-		this.log('msg <-', event.data);
-		const data = EJSON.parse(event.data);
+	sendPing() {
+		if (this.pingInterval) {
+			clearTimeout(this.pingInterval);
+		}
+		this.pingInterval = setTimeout(() => this.send({ msg: 'ping' }), 15000);
+	}
+
+	parseMessage(rawData) {
+		this.log('msg <-', rawData);
+		const data = EJSON.parse(rawData);
+
+		this.sendPing();
 
 		switch (data.msg) {
-			// case 'connected':
-			// 	if (this.oncePing) {
-			// 		this.oncePing.call(this);
-			// 		delete this.oncePing;
-			// 	}
-			// 	return;
-
 			case 'ping':
+				// console.log('ping!');
 				this.send({ msg: 'pong' });
-
-				if (this.oncePing) {
-					this.oncePing.call(this);
-					delete this.oncePing;
-				}
 
 				break;
 
