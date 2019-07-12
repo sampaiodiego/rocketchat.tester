@@ -30,7 +30,7 @@ const connsStep = parseInt(CONNS_STEP);
 
 			all.length = 0;
 
-			console.log('step', connsStep);
+			console.log('step', i);
 		}
 	}
 }());
