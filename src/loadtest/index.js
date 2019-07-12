@@ -5,7 +5,7 @@ let url;
 
 export const clients = [];
 
-export const connect = async(connectURL, qt) => {
+export const connect = async (connectURL, qt) => {
 	url = connectURL;
 
 	const connections = [];
@@ -37,11 +37,11 @@ export const connect = async(connectURL, qt) => {
 	return true;
 };
 
-const sendBatch = async(timer, interval, qtRoom, cb) => {
+const sendBatch = async (timer, interval, qtRoom, cb) => {
 	if (!interval || !qtRoom) {
 		return;
 	}
-	timer = setTimeout(async() => {
+	timer = setTimeout(async () => {
 		for (let index = 0; index < clients.length; index++) {
 			const dm = index % qtRoom;
 			await cb(index, dm);
@@ -56,7 +56,7 @@ export const sendPublic = (publicInterval = 1000, publicRooms = 0) => {
 		clearTimeout(publicTimer);
 		publicTimer = null;
 	}
-	sendBatch(publicTimer, publicInterval, publicRooms, async(index, dm) => {
+	sendBatch(publicTimer, publicInterval, publicRooms, async (index, dm) => {
 		const cli = clients[index];
 		return cli.sendPublic(dm);
 	});
