@@ -34,7 +34,7 @@ export default class MeteorWebSocket extends EventEmitter {
 			subscriptions: [],
 		};
 
-		this.debug = true;
+		this.debug = process.env.DEBUG === 'true';
 	}
 
 	log(...args) {
