@@ -2,9 +2,12 @@
 import RocketChat from './rocketchat';
 import { waitFor } from './utils';
 
-function go() {
+function go(url) {
 	return new Promise((resolve) => {
-		const client = new RocketChat({ runAfterStartup: false });
+		const client = new RocketChat({
+			url,
+			runAfterStartup: false,
+		});
 		client.on('started', () => {
 			resolve();
 		});
@@ -19,10 +22,18 @@ const {
 const totalConns = parseInt(TOTAL_CONNS);
 const connsStep = parseInt(CONNS_STEP);
 
+const {
+	WS_URL = '',
+} = process.env;
+
+const urls = WS_URL.split('|');
+const totalURLs = urls.length;
+
 (async function() {
 	const all = [];
+
 	for (let i = 0; i < totalConns; i++) {
-		all.push(go());
+		all.push(go(urls[i % totalURLs]));
 
 		if (i % connsStep === 0) {
 			await Promise.all(all);
